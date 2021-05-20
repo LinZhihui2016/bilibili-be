@@ -1,0 +1,14 @@
+import { join } from 'path';
+import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+
+const config: MysqlConnectionOptions = {
+  host: '*.*.*.*',
+  username: 'root',
+  password: '*',
+  type: 'mysql',
+  port: 3306,
+  database: '*',
+  entities: [join(__dirname, '../', '**/**.entity{.ts,.js}')],
+  synchronize: true,
+};
+export default config;
