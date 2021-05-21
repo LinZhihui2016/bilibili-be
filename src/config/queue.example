@@ -1,0 +1,11 @@
+import { BullModuleOptions } from '@nestjs/bull/dist/interfaces/bull-module-options.interface';
+
+const config: BullModuleOptions = {
+  name: 'job',
+  redis: {
+    port: *,
+    host: '*.*.*.*',
+    db: 2,
+  },
+};
+export default config;
