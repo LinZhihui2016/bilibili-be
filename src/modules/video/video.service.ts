@@ -19,6 +19,7 @@ import { $val } from '../../util/mysql';
 import { RedisService } from 'nestjs-redis';
 import { cacheName, CacheType } from '../../util/redis';
 import { HOUR } from '../../util/date';
+import { errorLog } from '../../log4js/log';
 
 @Injectable()
 export class VideoService {
@@ -43,38 +44,34 @@ export class VideoService {
     return await this.videoRepository.save($$data);
   }
 
+  failFetch(bv: string, fail_msg: string) {
+    errorLog([bv, fail_msg].join(' | '));
+    return this.create({
+      type: VideoType.fail,
+      bvid: bv,
+      fail_msg,
+    });
+  }
+
   async fetch(bv: string) {
     const redisKey = cacheName(CacheType.video, bv);
     const data = await this.redisService.getClient().get(redisKey);
     if (data) return this.create(JSON.parse(data) as VideoDto);
     const [err, html] = await apiBvHtml(bv);
-    if (err)
-      return this.create({
-        type: VideoType.fail,
-        bvid: bv,
-        fail_msg: err.toString(),
-      });
+    if (err) return this.failFetch(bv, err.toString());
     const $ = cheerio.load(html);
     if ($('.error-body .error-text').text()) {
       return this.create({ type: VideoType.deleted, bvid: bv });
     }
     const match = html.match(/window.__INITIAL_STATE__=(.*]});/);
     if (!match) {
-      return this.create({
-        type: VideoType.fail,
-        bvid: bv,
-        fail_msg: '获取INITIAL_STATE失败',
-      });
+      return this.failFetch(bv, '获取INITIAL_STATE失败');
     }
     let json: BangumiVideo | NormalVideo | null = null;
     try {
       json = JSON.parse(match[1]);
     } catch (e) {
-      return this.create({
-        type: VideoType.fail,
-        bvid: bv,
-        fail_msg: '解析INITIAL_STATE失败',
-      });
+      return this.failFetch(bv, '解析INITIAL_STATE失败');
     }
     try {
       if ('videoData' in json) {
@@ -149,11 +146,7 @@ export class VideoService {
         return this.create(bangumiBv);
       }
     } catch (e) {
-      return this.create({
-        type: VideoType.fail,
-        bvid: bv,
-        fail_msg: e.message,
-      });
+      return this.failFetch(bv, e.message);
     }
   }
 

@@ -1,0 +1,7 @@
+import { RedisModuleOptions } from 'nestjs-redis/dist/redis.interface';
+const config: RedisModuleOptions = {
+  port: *,
+  host: '*.*.*.*',
+  db: 0,
+};
+export default config;
