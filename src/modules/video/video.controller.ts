@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { VideoService } from './video.service';
 import mysql from 'mysql';
 
-@Controller('api/video')
+@Controller('api3/video')
 export class VideoController {
   constructor(private readonly videoService: VideoService) {}
 
