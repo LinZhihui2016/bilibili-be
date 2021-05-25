@@ -20,6 +20,7 @@ import { RedisService } from 'nestjs-redis';
 import { cacheName, CacheType } from '../../util/redis';
 import { HOUR } from '../../util/date';
 import { errorLog } from '../../log4js/log';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class VideoService {
@@ -157,5 +158,12 @@ export class VideoService {
         data: { type: JobType.Video, key },
       })),
     );
+  }
+
+  @Cron('0 0 12 * * *')
+  async retry() {
+    const list = await this.videoRepository.find({ type: VideoType.fail });
+    const bvList = list.map((i) => i.bvid);
+    await this.start(bvList);
   }
 }

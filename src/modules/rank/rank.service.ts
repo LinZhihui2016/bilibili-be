@@ -99,7 +99,7 @@ export class RankService {
     });
   }
 
-  @Cron('0 0 1 * * *')
+  @Cron('0 0 5 * * *')
   async addRankJob() {
     const rankIdList = Object.keys(RankId).filter((i) =>
       /^[0-9]*$/.test(i),
