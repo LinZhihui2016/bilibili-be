@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from 'nestjs-redis';
 import { JobProcessor } from './jobs/job.processor';
 import { BullModule } from '@nestjs/bull';
+import { UpModule } from './modules/up/up.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { BullModule } from '@nestjs/bull';
     ScheduleModule.forRoot(),
     RankModule,
     VideoModule,
+    UpModule,
     // JobModule,
   ],
   providers: [JobProcessor],

@@ -8,6 +8,5 @@ export class VideoController {
   @Get()
   async test() {
     return await this.videoService.retry();
-    // return await this.videoService.fetch('BV11K4y1A7HH');
   }
 }
