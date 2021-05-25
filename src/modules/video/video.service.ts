@@ -162,8 +162,11 @@ export class VideoService {
 
   @Cron('0 0 12 * * *')
   async retry() {
-    const list = await this.videoRepository.find({ type: VideoType.fail });
+    const list = await this.videoRepository.find({
+      where: { type: VideoType.fail + '' },
+    });
     const bvList = list.map((i) => i.bvid);
     await this.start(bvList);
+    return bvList.length;
   }
 }
