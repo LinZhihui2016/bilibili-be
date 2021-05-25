@@ -106,4 +106,15 @@ export class UpService {
     await this.start(upList);
     return upList.length;
   }
+
+  @Cron('0 0 * * * *')
+  async update() {
+    const list = await this.upRepository.find({
+      order: {
+        updated: 'ASC',
+      },
+      take: 100,
+    });
+    await this.start(list.map((i) => i.mid));
+  }
 }

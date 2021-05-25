@@ -19,7 +19,6 @@ import { UpModule } from './modules/up/up.module';
       },
       inject: [ConfigService],
     }),
-
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         return config.get('mysql');

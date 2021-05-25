@@ -169,4 +169,15 @@ export class VideoService {
     await this.start(bvList);
     return bvList.length;
   }
+
+  @Cron('0 0 * * * *')
+  async update() {
+    const list = await this.videoRepository.find({
+      order: {
+        updated: 'ASC',
+      },
+      take: 100,
+    });
+    await this.start(list.map((i) => i.bvid));
+  }
 }
