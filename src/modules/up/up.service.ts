@@ -107,14 +107,14 @@ export class UpService {
     return upList.length;
   }
 
-  @Cron('0 0 * * * *')
+  @Cron('0 * * * * *')
   async update() {
     await this.jobQueue.clean(1000, 'completed');
     const list = await this.upRepository.find({
       order: {
         updated: 'ASC',
       },
-      take: 100,
+      take: 2,
     });
     await this.start(list.map((i) => i.mid));
   }

@@ -170,14 +170,14 @@ export class VideoService {
     return bvList.length;
   }
 
-  @Cron('0 0 * * * *')
+  @Cron('30 * * * * *')
   async update() {
     await this.jobQueue.clean(1000, 'completed');
     const list = await this.videoRepository.find({
       order: {
         updated: 'ASC',
       },
-      take: 100,
+      take: 2,
     });
     await this.start(list.map((i) => i.bvid));
   }
