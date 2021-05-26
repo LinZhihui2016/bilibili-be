@@ -17,5 +17,6 @@ export class JobService {
   async retry() {
     const jobs = await this.jobQueue.getFailed();
     await this.jobQueue.addBulk(jobs.map(({ name, data }) => ({ name, data })));
+    await this.jobQueue.clean(1000, 'failed');
   }
 }
