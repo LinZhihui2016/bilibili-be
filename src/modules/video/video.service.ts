@@ -172,7 +172,6 @@ export class VideoService {
 
   @Cron('30 * * * * *')
   async update() {
-    await this.jobQueue.clean(1000, 'completed');
     const list = await this.videoRepository.find({
       order: {
         updated: 'ASC',
