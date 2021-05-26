@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VideoEntity, VideoType } from './video.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
@@ -173,6 +173,9 @@ export class VideoService {
   @Cron('30 * * * * *')
   async update() {
     const list = await this.videoRepository.find({
+      where: {
+        type: In([VideoType.normal + '', VideoType.bangumi + '']),
+      },
       order: {
         updated: 'ASC',
       },

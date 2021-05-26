@@ -110,6 +110,9 @@ export class UpService {
   @Cron('0 * * * * *')
   async update() {
     const list = await this.upRepository.find({
+      where: {
+        type: UpType.normal + '',
+      },
       order: {
         updated: 'ASC',
       },
