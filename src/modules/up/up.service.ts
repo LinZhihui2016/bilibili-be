@@ -29,6 +29,9 @@ export class UpService {
     const { mid } = data;
     const $data = await this.upRepository.findOne({ where: { mid } });
     const $$data = await $val($data || new UpEntity(), data);
+    if (data.type !== UpType.fail) {
+      $$data.fail_msg = '';
+    }
     const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.up, mid);
     await redis.set(redisKey, JSON.stringify($$data));

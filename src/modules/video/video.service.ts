@@ -37,6 +37,9 @@ export class VideoService {
     const { bvid } = data;
     const $data = await this.videoRepository.findOne({ where: { bvid } });
     const $$data = await $val($data || new VideoEntity(), data);
+    if (data.type !== VideoType.fail) {
+      $$data.fail_msg = '';
+    }
     const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.video, bvid);
     await redis.set(redisKey, JSON.stringify($$data));
