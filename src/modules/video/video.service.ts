@@ -45,11 +45,13 @@ export class VideoService {
     return await this.videoRepository.save($$data);
   }
 
-  failFetch(bv: string, fail_msg: string) {
-    errorLog([bv, fail_msg].join(' | '));
+  async failFetch(bvid: string, fail_msg: string) {
+    const $data = await this.videoRepository.findOne({ where: { bvid } });
+    if ($data) return;
+    errorLog([bvid, fail_msg].join(' | '));
     return this.create({
       type: VideoType.fail,
-      bvid: bv,
+      bvid,
       fail_msg,
     });
   }
@@ -160,7 +162,7 @@ export class VideoService {
     );
   }
 
-  @Cron('0 0 12 * * *')
+  @Cron('0 0 * * * *')
   async retry() {
     const list = await this.videoRepository.find({
       where: { type: VideoType.fail + '' },

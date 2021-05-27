@@ -21,7 +21,7 @@ export class JobProcessor {
     const { key, type } = job.data;
     const time = dayjs().get('hour');
     const isMidNight = time < 6;
-    const $sleep = async (t: number) => await sleep(isMidNight ? t * 2 : t);
+    const $sleep = async (t: number) => await sleep(isMidNight ? t * 5 : t);
     switch (type) {
       case JobType.Rank:
         if (key === -1) {

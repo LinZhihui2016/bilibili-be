@@ -37,8 +37,10 @@ export class UpService {
     return await this.upRepository.save($$data);
   }
 
-  failFetch(mid: number, fail_msg: string) {
+  async failFetch(mid: number, fail_msg: string) {
     errorLog([mid, fail_msg].join(' | '));
+    const $data = await this.upRepository.findOne({ where: { mid } });
+    if ($data) return;
     return this.create({
       type: UpType.fail,
       mid,
@@ -97,7 +99,7 @@ export class UpService {
     );
   }
 
-  @Cron('0 0 18 * * *')
+  @Cron('0 0 * * * *')
   async retry() {
     const list = await this.upRepository.find({
       where: { type: UpType.fail + '' },
