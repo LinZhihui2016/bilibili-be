@@ -14,7 +14,7 @@ import {
   VideoNormalDto,
 } from './video.dto';
 import dayjs from 'dayjs';
-import { JobType } from '../../jobs/job.type';
+import { JobData, JobType, JobUpFrom, JobVideoFrom } from '../../jobs/job.type';
 import { $val } from '../../util/mysql';
 import { RedisService } from 'nestjs-redis';
 import { cacheName, CacheType } from '../../util/redis';
@@ -29,7 +29,7 @@ export class VideoService {
   constructor(
     @InjectRepository(VideoEntity)
     private readonly videoRepository: Repository<VideoEntity>,
-    @InjectQueue('job') private jobQueue: Queue,
+    @InjectQueue('job') private jobQueue: Queue<JobData>,
     private readonly redisService: RedisService,
   ) {}
 
@@ -111,7 +111,11 @@ export class VideoService {
           likes: like,
           type: VideoType.normal,
         };
-        await this.jobQueue.add('crawler', { type: JobType.Up, key: +mid });
+        await this.jobQueue.add('crawler', {
+          type: JobType.Up,
+          key: +mid,
+          from: JobUpFrom.VIDEO,
+        });
         return this.create(normalBv);
       } else if ('mediaInfo' in json) {
         const {
@@ -148,6 +152,7 @@ export class VideoService {
         await this.jobQueue.add('crawler', {
           type: JobType.Up,
           key: +upInfo.mid,
+          from: JobUpFrom.VIDEO,
         });
         return this.create(bangumiBv);
       }
@@ -156,11 +161,11 @@ export class VideoService {
     }
   }
 
-  async start(list: string[]) {
+  async start(list: string[], from: JobVideoFrom) {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Video, key },
+        data: { type: JobType.Video, key, from },
       })),
     );
   }
@@ -171,7 +176,7 @@ export class VideoService {
       where: { type: VideoType.fail + '' },
     });
     const bvList = list.map((i) => i.bvid);
-    await this.start(bvList);
+    await this.start(bvList, JobVideoFrom.RETRY);
     return bvList.length;
   }
 
@@ -188,6 +193,9 @@ export class VideoService {
       },
       take: 2,
     });
-    await this.start(list.map((i) => i.bvid));
+    await this.start(
+      list.map((i) => i.bvid),
+      JobVideoFrom.UPDATE,
+    );
   }
 }

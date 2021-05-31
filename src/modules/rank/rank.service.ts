@@ -5,7 +5,12 @@ import { RankEntity, RankId } from './rank.entity';
 import { apiRank } from '../../crawler/ranking';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { JobData, JobType } from '../../jobs/job.type';
+import {
+  JobData,
+  JobRankFrom,
+  JobType,
+  JobVideoFrom,
+} from '../../jobs/job.type';
 import { Cron } from '@nestjs/schedule';
 import { RankDto } from './rank.dto';
 import { $val } from '../../util/mysql';
@@ -89,7 +94,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Video, key },
+        data: { type: JobType.Video, key, from: JobVideoFrom.RANK },
       })),
     );
     return this.create({
@@ -108,7 +113,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       rankIdList.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Rank, key },
+        data: { type: JobType.Rank, key, from: JobRankFrom.CRON },
       })),
     );
   }

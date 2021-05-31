@@ -11,7 +11,7 @@ import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
 import { HOUR, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
-import { JobType } from '../../jobs/job.type';
+import { JobData, JobType, JobUpFrom } from '../../jobs/job.type';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class UpService {
   constructor(
     @InjectRepository(UpEntity)
     private readonly upRepository: Repository<UpEntity>,
-    @InjectQueue('job') private jobQueue: Queue,
+    @InjectQueue('job') private jobQueue: Queue<JobData>,
     private readonly redisService: RedisService,
   ) {}
 
@@ -93,11 +93,11 @@ export class UpService {
     }
   }
 
-  async start(list: number[]) {
+  async start(list: number[], from: JobUpFrom) {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Up, key },
+        data: { type: JobType.Up, key, from },
       })),
     );
   }
@@ -108,7 +108,7 @@ export class UpService {
       where: { type: UpType.fail + '' },
     });
     const upList = list.map((i) => i.mid);
-    await this.start(upList);
+    await this.start(upList, JobUpFrom.RETRY);
     return upList.length;
   }
 
@@ -125,6 +125,9 @@ export class UpService {
       },
       take: 2,
     });
-    await this.start(list.map((i) => i.mid));
+    await this.start(
+      list.map((i) => i.mid),
+      JobUpFrom.UPDATE,
+    );
   }
 }
