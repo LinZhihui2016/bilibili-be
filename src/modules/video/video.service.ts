@@ -177,6 +177,8 @@ export class VideoService {
 
   @Cron('30 * * * * *')
   async update() {
+    const waitCount = await this.jobQueue.getWaitingCount();
+    if (waitCount > 100) return;
     const list = await this.videoRepository.find({
       where: {
         type: In([VideoType.normal + '', VideoType.bangumi + '']),

@@ -114,6 +114,8 @@ export class UpService {
 
   @Cron('0 * * * * *')
   async update() {
+    const waitCount = await this.jobQueue.getWaitingCount();
+    if (waitCount > 100) return;
     const list = await this.upRepository.find({
       where: {
         type: UpType.normal + '',
