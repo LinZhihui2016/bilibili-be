@@ -4,16 +4,16 @@ import { JobData, JobType } from './job.type';
 import { sleep } from '../util/date';
 import { RankService } from '../modules/rank/rank.service';
 import { RankId } from '../modules/rank/rank.entity';
-import { VideoService } from '../modules/video/video.service';
-import { UpService } from '../modules/up/up.service';
+import { VideoCrawler } from '../modules/video/video.crawler';
+import { UpCrawler } from '../modules/up/up.crawler';
 import dayjs from 'dayjs';
 
 @Processor('job')
 export class JobProcessor {
   constructor(
     private readonly rankService: RankService,
-    private readonly videoService: VideoService,
-    private readonly upService: UpService,
+    private readonly videoCrawler: VideoCrawler,
+    private readonly upCrawler: UpCrawler,
   ) {}
 
   @Process('crawler')
@@ -35,11 +35,11 @@ export class JobProcessor {
       case JobType.Up:
         const mid = +key;
         if (isNaN(mid)) return;
-        await this.upService.fetch(mid);
+        await this.upCrawler.fetch(mid);
         await $sleep(10000);
         break;
       case JobType.Video:
-        await this.videoService.fetch(key as string);
+        await this.videoCrawler.fetch(key as string);
         await $sleep(3000);
         break;
     }

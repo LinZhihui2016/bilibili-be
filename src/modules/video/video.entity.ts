@@ -67,4 +67,7 @@ export class VideoEntity extends $BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   fail_msg: string;
+
+  @Column({ type: 'int', nullable: true })
+  crawlerTimes: number;
 }

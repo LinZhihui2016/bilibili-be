@@ -1,9 +1,10 @@
 import { UpEntity } from './up.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UpController } from './up.controller';
-import { UpService } from './up.service';
+import { UpCrawler } from './up.crawler';
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { UpService } from './up.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { BullModule } from '@nestjs/bull';
     TypeOrmModule.forFeature([UpEntity]),
   ],
   controllers: [UpController],
-  providers: [UpService],
-  exports: [UpService],
+  providers: [UpCrawler, UpService],
+  exports: [UpCrawler, UpService],
 })
 export class UpModule {}
