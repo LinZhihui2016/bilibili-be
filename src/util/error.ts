@@ -3,7 +3,9 @@ import { errorLog } from '../log4js/log';
 
 export enum ErrBase {
   参数类型错误 = 1,
-  该账号已存在,
+  该账号已存在 = 101,
+  账号不存在,
+  密码错误,
 }
 
 export type Err = ErrBase;

@@ -27,12 +27,15 @@ export class UserService {
 
   async login(username: string, password: string) {
     const user = await this.findOne(username);
-    if (user && user.password === password) {
-      return {
-        access_token: this.jwtService.sign({ username, password }),
-      };
+    if (!user) {
+      throw new ResException(ErrBase.账号不存在);
     }
-    return null;
+    if (user.password !== password) {
+      throw new ResException(ErrBase.密码错误);
+    }
+    return {
+      access_token: this.jwtService.sign({ username, password }),
+    };
   }
 
   async register(username: string, password: string) {
