@@ -1,0 +1,10 @@
+import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
+
+const config: JwtModuleOptions = {
+  secret: '*',
+  signOptions: {
+    expiresIn: '6h',
+  },
+};
+
+export default config;
