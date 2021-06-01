@@ -7,7 +7,16 @@ export class VideoController {
 
   @Get()
   async list(@Query() query) {
-    const { page = '1', pageSize = '10' } = query;
-    return await this.videoService.getList({ page, pageSize });
+    const { page, pageSize, orderKey, orderby, type } = query;
+
+    return await this.videoService.getList(
+      {
+        page,
+        pageSize,
+        orderKey,
+        orderby,
+      },
+      type,
+    );
   }
 }

@@ -7,7 +7,7 @@ export class UpController {
 
   @Get('')
   async list(@Query() query) {
-    const { page = '1', pageSize = '10' } = query;
-    return this.upService.getList({ page, pageSize });
+    const { page, pageSize, orderKey, orderby, type } = query;
+    return this.upService.getList({ page, pageSize, orderKey, orderby }, type);
   }
 }
