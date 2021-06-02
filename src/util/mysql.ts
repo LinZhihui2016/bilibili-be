@@ -34,7 +34,7 @@ export const listParams = <T>(opt: {
   const $$pageSize = isNaN($pageSize) ? 10 : $pageSize;
   const pageSize = [10, 30, 50, 100].includes($$pageSize) ? $$pageSize : 10;
   const $page = parseInt(opt.page);
-  const page = isNaN($page) ? 1 : $page;
+  const page = isNaN($page) ? 0 : $page;
   const {
     orderby = Alias.OrderBy.DESC,
     orderKey = 'id',
@@ -48,7 +48,7 @@ export const listParams = <T>(opt: {
   }
   return {
     take: pageSize,
-    skip: (page - 1) * pageSize,
+    skip: page * pageSize,
     order,
   };
 };
