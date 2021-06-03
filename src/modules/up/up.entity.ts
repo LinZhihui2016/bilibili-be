@@ -2,8 +2,8 @@ import { Column, Entity, Index } from 'typeorm';
 import { $BaseEntity } from '../../util/entity';
 
 export enum UpType {
-  normal,
-  fail,
+  normal = 'normal',
+  fail = 'fail',
 }
 
 @Entity({ name: 'up' })

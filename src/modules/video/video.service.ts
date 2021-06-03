@@ -27,7 +27,7 @@ export class VideoService {
     if (['deleted', 'fail', 'normal', 'bangumi'].includes(type)) {
       where.type = $enum(VideoType[type]);
     } else if (type !== 'all') {
-      where.type = In($enum([VideoType.bangumi, VideoType.normal]));
+      // where.type = In($enum([VideoType.bangumi, VideoType.normal]));
     }
     const [list, count] = await this.videoRepository.findAndCount({
       ...listParams({

@@ -2,10 +2,10 @@ import { $BaseEntity } from '../../util/entity';
 import { Column, Entity, Index } from 'typeorm';
 
 export enum VideoType {
-  normal,
-  bangumi,
-  deleted,
-  fail,
+  normal = 'normal',
+  bangumi = 'bangumi',
+  deleted = 'deleted',
+  fail = 'fail',
 }
 
 @Entity({ name: 'video' })
