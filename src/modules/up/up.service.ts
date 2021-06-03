@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpEntity, UpType } from './up.entity';
 import { Repository } from 'typeorm';
-import { $enum, listParams } from '../../util/mysql';
+import { listParams } from '../../util/mysql';
 import { Alias } from '../../type';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import $EntityFieldsNames = Alias.$EntityFieldsNames;
@@ -21,11 +21,11 @@ export class UpService {
       orderby?: Alias.OrderBy;
       orderKey?: $EntityFieldsNames<UpEntity>;
     },
-    type: string,
+    type: keyof typeof UpType,
   ) {
     const where: FindOneOptions<UpEntity>['where'] = {};
-    if (['fail', 'normal'].includes(type)) {
-      where.type = $enum(UpType[type]);
+    if (Object.keys(UpType).includes(UpType[type])) {
+      where.type = UpType[type];
     }
     const [list, count] = await this.upRepository.findAndCount({
       ...listParams({ ...opt, orderList: ['likes', 'archive', 'follower'] }),

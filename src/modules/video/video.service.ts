@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { VideoEntity, VideoType } from './video.entity';
-import { $enum, listParams } from '../../util/mysql';
+import { listParams } from '../../util/mysql';
 import { Alias } from '../../type';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import $EntityFieldsNames = Alias.$EntityFieldsNames;
@@ -21,13 +21,13 @@ export class VideoService {
       orderby?: Alias.OrderBy;
       orderKey?: $EntityFieldsNames<VideoEntity>;
     },
-    type: string,
+    type: keyof typeof VideoType | 'all',
   ) {
     const where: FindOneOptions<VideoEntity>['where'] = {};
-    if (['deleted', 'fail', 'normal', 'bangumi'].includes(type)) {
-      where.type = $enum(VideoType[type]);
+    if (Object.keys(VideoType).includes(VideoType[type])) {
+      where.type = VideoType[type];
     } else if (type !== 'all') {
-      // where.type = In($enum([VideoType.bangumi, VideoType.normal]));
+      where.type = In([VideoType.bangumi, VideoType.normal]);
     }
     const [list, count] = await this.videoRepository.findAndCount({
       ...listParams({
