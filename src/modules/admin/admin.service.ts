@@ -23,12 +23,13 @@ export class AdminService {
         const { type } = i.data;
         return typeArr.includes(type);
       })
-      .map(({ data, finishedOn, timestamp, id, failedReason }) => ({
+      .map(({ data, finishedOn, timestamp, id, failedReason, getState }) => ({
         ...data,
         finishedOn,
         timestamp,
         id,
         failedReason,
+        state: getState(),
       }));
     return {
       list: AdminService.pageParams($listFilterByType, { page, pageSize }),
