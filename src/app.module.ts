@@ -11,6 +11,7 @@ import { BullModule } from '@nestjs/bull';
 import { UpModule } from './modules/up/up.module';
 import { JobModule } from './jobs/job.module';
 import { UserModule } from './modules/user/user.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { UserModule } from './modules/user/user.module';
     UpModule,
     JobModule,
     UserModule,
+    AdminModule,
     // AuthModule,
   ],
   providers: [JobProcessor],

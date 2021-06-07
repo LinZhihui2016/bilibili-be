@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JobService } from './job.service';
+import { JobCron } from './job.cron';
 import { BullModule } from '@nestjs/bull';
 
 @Module({
@@ -8,6 +8,6 @@ import { BullModule } from '@nestjs/bull';
       name: 'job',
     }),
   ],
-  providers: [JobService],
+  providers: [JobCron],
 })
 export class JobModule {}

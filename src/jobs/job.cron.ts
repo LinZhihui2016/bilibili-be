@@ -5,7 +5,7 @@ import { JobData } from './job.type';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
-export class JobService {
+export class JobCron {
   constructor(@InjectQueue('job') private jobQueue: Queue<JobData>) {}
 
   @Cron('0 0 * * * *')

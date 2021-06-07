@@ -16,13 +16,6 @@ export const $val = async (entity: ObjectLiteral, data: ObjectLiteral) => {
   return entity;
 };
 
-export function $enum(v: number): string;
-export function $enum(v: number[]): string[];
-
-export function $enum(v: number | number[]) {
-  return Array.isArray(v) ? v.map((i) => i + '') : v + '';
-}
-
 export const listParams = <T>(opt: {
   pageSize?: string;
   page?: string;
