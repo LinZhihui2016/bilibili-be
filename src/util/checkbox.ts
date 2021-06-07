@@ -26,10 +26,10 @@ export class Checkbox<T> {
   }
 
   obj() {
-    const obj = {};
-    this.map.forEach((v, k) => {
-      obj[k] = v;
-    });
-    return obj;
+    const tar = [];
+    for (const [key, value] of this.map.entries()) {
+      tar.push({ key, value });
+    }
+    return tar;
   }
 }
