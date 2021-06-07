@@ -114,7 +114,7 @@ export class VideoCrawler {
           type: VideoType.normal,
         };
         await this.jobQueue.add('crawler', {
-          type: JobType.Up,
+          type: JobType.UP,
           key: +mid,
           from: JobUpFrom.VIDEO,
         });
@@ -152,7 +152,7 @@ export class VideoCrawler {
           up_mid: upInfo.mid,
         };
         await this.jobQueue.add('crawler', {
-          type: JobType.Up,
+          type: JobType.UP,
           key: +upInfo.mid,
           from: JobUpFrom.VIDEO,
         });
@@ -167,7 +167,7 @@ export class VideoCrawler {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Video, key, from },
+        data: { type: JobType.VIDEO, key, from },
       })),
     );
   }

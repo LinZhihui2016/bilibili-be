@@ -20,7 +20,7 @@ const jobStatus: JobStatus[] = [
   'failed',
   'paused',
 ];
-const jobType: JobType[] = [JobType.Rank, JobType.Video, JobType.Up];
+const jobType: JobType[] = [JobType.RANK, JobType.VIDEO, JobType.UP];
 
 @Controller('api3/admin')
 export class AdminController {

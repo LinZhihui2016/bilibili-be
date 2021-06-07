@@ -99,7 +99,7 @@ export class UpCrawler {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Up, key, from },
+        data: { type: JobType.UP, key, from },
       })),
     );
   }

@@ -1,9 +1,9 @@
 import { RankId } from '../modules/rank/rank.entity';
 
 export enum JobType {
-  Rank,
-  Video,
-  Up,
+  RANK = 'rank',
+  VIDEO = 'video',
+  UP = 'up',
 }
 
 export enum JobRankFrom {
@@ -25,19 +25,19 @@ export type JobFrom = JobRankFrom | JobVideoFrom | JobUpFrom;
 
 export interface JobRankData {
   from: JobRankFrom;
-  type: JobType.Rank;
+  type: JobType.RANK;
   key: RankId;
 }
 
 export interface JobVideoData {
   from: JobVideoFrom;
-  type: JobType.Video;
+  type: JobType.VIDEO;
   key: string;
 }
 
 export interface JobUpData {
   from: JobUpFrom;
-  type: JobType.Up;
+  type: JobType.UP;
   key: number;
 }
 

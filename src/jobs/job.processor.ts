@@ -23,7 +23,7 @@ export class JobProcessor {
     const isMidNight = time < 6;
     const $sleep = async (t: number) => await sleep(isMidNight ? t * 5 : t);
     switch (type) {
-      case JobType.Rank:
+      case JobType.RANK:
         if (key === -1) {
           await this.rankService.count();
           await $sleep(1000);
@@ -32,13 +32,13 @@ export class JobProcessor {
           await $sleep(3000);
         }
         break;
-      case JobType.Up:
+      case JobType.UP:
         const mid = +key;
         if (isNaN(mid)) return;
         await this.upCrawler.fetch(mid);
         await $sleep(10000);
         break;
-      case JobType.Video:
+      case JobType.VIDEO:
         await this.videoCrawler.fetch(key as string);
         await $sleep(3000);
         break;

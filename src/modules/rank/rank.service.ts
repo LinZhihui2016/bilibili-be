@@ -94,7 +94,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Video, key, from: JobVideoFrom.RANK },
+        data: { type: JobType.VIDEO, key, from: JobVideoFrom.RANK },
       })),
     );
     return this.create({
@@ -113,7 +113,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       rankIdList.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.Rank, key, from: JobRankFrom.CRON },
+        data: { type: JobType.RANK, key, from: JobRankFrom.CRON },
       })),
     );
   }
