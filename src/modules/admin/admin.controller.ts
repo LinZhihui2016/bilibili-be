@@ -12,14 +12,7 @@ import { JobType } from '../../jobs/job.type';
 import { JobStatus } from 'bull';
 import { Checkbox } from '../../util/checkbox';
 
-const jobStatus: JobStatus[] = [
-  'completed',
-  'waiting',
-  'active',
-  'delayed',
-  'failed',
-  'paused',
-];
+const jobStatus: JobStatus[] = ['completed', 'waiting', 'failed'];
 const jobType: JobType[] = [JobType.RANK, JobType.VIDEO, JobType.UP];
 
 @Controller('api3/admin')

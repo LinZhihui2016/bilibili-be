@@ -23,14 +23,21 @@ export class AdminService {
         const { type } = i.data;
         return typeArr.includes(type);
       })
-      .map(({ data, finishedOn, timestamp, id, failedReason, getState }) => ({
-        ...data,
-        finishedOn,
-        timestamp,
-        id,
-        failedReason,
-        state: getState(),
-      }));
+      .map(({ data, finishedOn, timestamp, id, failedReason }) => {
+        let state: string;
+        const setState = (v: string) => (state = v);
+        if (finishedOn && failedReason) setState('fail');
+        if (finishedOn && !failedReason) setState('completed');
+        if (!finishedOn) setState('waiting');
+        return {
+          ...data,
+          finishedOn,
+          timestamp,
+          id,
+          failedReason,
+          state,
+        };
+      });
     return {
       list: AdminService.pageParams($listFilterByType, { page, pageSize }),
       count: $listFilterByType.length,
