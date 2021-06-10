@@ -6,7 +6,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from 'nestjs-redis';
 import { BullModule } from '@nestjs/bull';
 import { UserModule } from './modules/user/user.module';
-import { CrawlerModule } from './modules/crawler/crawler.module';
+import { UpModule } from './modules/up/up.module';
+import { VideoModule } from './modules/video/video.module';
+import { RankModule } from './modules/rank/rank.module';
 
 @Module({
   imports: [
@@ -32,7 +34,10 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
 
     ScheduleModule.forRoot(),
     UserModule,
-    CrawlerModule,
+    // CrawlerModule,
+    UpModule,
+    VideoModule,
+    RankModule,
   ],
 })
 export class AppModule {}

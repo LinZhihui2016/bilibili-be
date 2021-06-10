@@ -5,6 +5,10 @@ import { In, ObjectLiteral, Repository } from 'typeorm';
 import { listParams } from '../../util/mysql';
 import { Alias } from '../../type';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
+import { JobStatus, Queue } from 'bull';
+import { pageParams } from '../../util/redis';
+import { InjectQueue } from '@nestjs/bull';
+import { UpJob } from './up.processor';
 import $EntityFieldsNames = Alias.$EntityFieldsNames;
 
 @Injectable()
@@ -12,6 +16,7 @@ export class UpService {
   constructor(
     @InjectRepository(UpEntity)
     private readonly upRepository: Repository<UpEntity>,
+    @InjectQueue('up') private jobQueue: Queue<UpJob>,
   ) {}
 
   async getList(
@@ -58,5 +63,30 @@ export class UpService {
       },
       take,
     });
+  }
+
+  async getQueue(statusArr: JobStatus[], page, pageSize) {
+    const list = await this.jobQueue.getJobs(statusArr);
+    const $listFilterByType = list.map(
+      ({ data, finishedOn, timestamp, id, failedReason }) => {
+        let state: string;
+        const setState = (v: string) => (state = v);
+        if (finishedOn && failedReason) setState('fail');
+        if (finishedOn && !failedReason) setState('completed');
+        if (!finishedOn) setState('waiting');
+        return {
+          ...data,
+          finishedOn,
+          timestamp,
+          id,
+          failedReason,
+          state,
+        };
+      },
+    );
+    return {
+      list: pageParams($listFilterByType, { page, pageSize }),
+      count: $listFilterByType.length,
+    };
   }
 }

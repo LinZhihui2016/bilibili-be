@@ -1,38 +1,49 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { VideoEntity, VideoType } from '../video/video.entity';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
-import cheerio from 'cheerio';
+import { VideoFrom, VideoJob } from './video.processor';
+import { RedisService } from 'nestjs-redis';
+import { VideoService } from './video.service';
 import {
   BangumiVideo,
   NormalVideo,
   VideoBangumiDto,
   VideoDto,
   VideoNormalDto,
-} from '../video/video.dto';
-import dayjs from 'dayjs';
-import { JobData, CrawlerType, JobUpFrom, JobVideoFrom } from './crawler.type';
+} from './video.dto';
 import { $val } from '../../util/mysql';
-import { RedisService } from 'nestjs-redis';
+import { VideoEntity, VideoType } from './video.entity';
 import { cacheName, CacheType } from '../../util/redis';
-import { HOUR } from '../../util/date';
+import { HOUR, sleep } from '../../util/date';
 import { errorLog } from '../../log4js/log';
+import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
+import cheerio from 'cheerio';
+import dayjs from 'dayjs';
 import { Cron } from '@nestjs/schedule';
-import { VideoService } from '../video/video.service';
+import { UpFrom, UpJob } from '../up/up.processor';
 
 @Injectable()
 export class VideoCrawler {
   private readonly logger = new Logger(VideoCrawler.name);
 
+  private log(k: string, f: string) {
+    this.logger.log([k, 'from', f].join(' '));
+  }
+
   constructor(
-    @InjectQueue('job')
-    private jobQueue: Queue<JobData>,
+    @InjectQueue('video')
+    private jobQueue: Queue<VideoJob>,
+    @InjectQueue('up')
+    private upJobQueue: Queue<UpJob>,
     private readonly redisService: RedisService,
     private readonly videoService: VideoService,
   ) {}
 
-  async create(data: VideoDto) {
+  async fetchUp(mid: number) {
+    await this.upJobQueue.add('upCrawler', { from: UpFrom.VIDEO, key: mid });
+  }
+
+  async create(data: VideoDto, from = 'crawler') {
     const { bvid } = data;
     const $data = await this.videoService.findByBvid(bvid);
     const $$data = await $val($data || new VideoEntity(), data);
@@ -45,7 +56,10 @@ export class VideoCrawler {
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, HOUR);
     const saveData = await this.videoService.save($$data);
-    this.logger.log(redisKey);
+    this.log(redisKey, from);
+    if (from === 'crawler') {
+      await sleep(3000);
+    }
     return saveData;
   }
 
@@ -112,11 +126,7 @@ export class VideoCrawler {
           likes: like,
           type: VideoType.normal,
         };
-        await this.jobQueue.add('crawler', {
-          type: CrawlerType.UP,
-          key: +mid,
-          from: JobUpFrom.VIDEO,
-        });
+        await this.fetchUp(+mid);
         return this.create(normalBv);
       } else if ('mediaInfo' in json) {
         const {
@@ -150,11 +160,7 @@ export class VideoCrawler {
           up_name: upInfo.name,
           up_mid: upInfo.mid,
         };
-        await this.jobQueue.add('crawler', {
-          type: CrawlerType.UP,
-          key: +upInfo.mid,
-          from: JobUpFrom.VIDEO,
-        });
+        await this.fetchUp(+upInfo.mid);
         return this.create(bangumiBv);
       }
     } catch (e) {
@@ -162,20 +168,24 @@ export class VideoCrawler {
     }
   }
 
-  async start(list: string[], from: JobVideoFrom) {
+  async start(list: string[], from: VideoFrom) {
     await this.jobQueue.addBulk(
       list.map((key) => ({
-        name: 'crawler',
-        data: { type: CrawlerType.VIDEO, key, from },
+        name: 'videoCrawler',
+        data: { key, from },
       })),
     );
   }
 
   @Cron('0 0 * * * *')
   async retry() {
+    const jobs = await this.jobQueue.getFailed();
+    await this.jobQueue.clean(1000, 'failed');
+    await this.jobQueue.clean(1000, 'completed');
+
     const list = await this.videoService.findFail();
-    const bvList = list.map((i) => i.bvid);
-    await this.start(bvList, JobVideoFrom.RETRY);
+    const bvList = list.map((i) => i.bvid).concat(jobs.map((j) => j.data.key));
+    await this.start(bvList, VideoFrom.RETRY);
     return bvList.length;
   }
 
@@ -183,10 +193,10 @@ export class VideoCrawler {
   async update() {
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
-    const list = await this.videoService.findNeedUpdate(2);
+    const list = await this.videoService.findNeedUpdate(10);
     await this.start(
       list.map((i) => i.bvid),
-      JobVideoFrom.UPDATE,
+      VideoFrom.UPDATE,
     );
   }
 }

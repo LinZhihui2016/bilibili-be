@@ -2,28 +2,30 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
-import { UpEntity, UpType } from '../up/up.entity';
+import { UpEntity, UpType } from './up.entity';
 import { cacheName, CacheType } from '../../util/redis';
-import { UpBaseDto, UpDto } from '../up/up.dto';
+import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
 import { HOUR, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
-import { CrawlerType, JobData, JobUpFrom } from './crawler.type';
 import { Cron } from '@nestjs/schedule';
-import { UpService } from '../up/up.service';
+import { UpFrom, UpJob } from './up.processor';
+import { UpService } from './up.service';
 
 @Injectable()
 export class UpCrawler {
   private readonly logger = new Logger(UpCrawler.name);
-
+  private log(k: string, f: string) {
+    this.logger.log([k, 'from', f].join(' '));
+  }
   constructor(
-    @InjectQueue('job') private jobQueue: Queue<JobData>,
+    @InjectQueue('up') private jobQueue: Queue<UpJob>,
     private readonly redisService: RedisService,
     private readonly upService: UpService,
   ) {}
 
-  async create(data: UpDto) {
+  async create(data: UpDto, from = 'crawler') {
     const { mid } = data;
     const $data = await this.upService.findByMid(mid);
     const $$data = await $val($data || new UpEntity(), data);
@@ -36,14 +38,16 @@ export class UpCrawler {
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, HOUR);
     const saveData = await this.upService.save($$data);
-    this.logger.log(redisKey);
+    this.log(redisKey, from);
+    if (from === 'crawler') {
+      await sleep(10000);
+    }
     return saveData;
   }
 
   async failFetch(mid: number, fail_msg: string) {
     errorLog([mid, fail_msg].join(' | '));
     const $data = await this.upService.findByMid(mid);
-
     if ($data) return;
     return this.create({
       type: UpType.fail,
@@ -55,7 +59,7 @@ export class UpCrawler {
   async fetch(mid: number) {
     const redisKey = cacheName(CacheType.up, mid);
     const data = await this.redisService.getClient().get(redisKey);
-    if (data) return this.create(JSON.parse(data) as UpDto);
+    if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
 
     const [e1, info] = await apiUserInfo(mid);
     if (e1) return this.failFetch(mid, e1.toString());
@@ -94,20 +98,24 @@ export class UpCrawler {
     }
   }
 
-  async start(list: number[], from: JobUpFrom) {
+  async start(list: number[], from: UpFrom) {
     await this.jobQueue.addBulk(
       list.map((key) => ({
-        name: 'crawler',
-        data: { type: CrawlerType.UP, key, from },
+        name: 'upCrawler',
+        data: { key, from },
       })),
     );
   }
 
   @Cron('0 0 * * * *')
   async retry() {
+    const jobs = await this.jobQueue.getFailed();
+    await this.jobQueue.clean(1000, 'failed');
+    await this.jobQueue.clean(1000, 'completed');
+
     const list = await this.upService.findFail();
-    const upList = list.map((i) => i.mid);
-    await this.start(upList, JobUpFrom.RETRY);
+    const upList = list.map((i) => i.mid).concat(jobs.map((j) => j.data.key));
+    await this.start(upList, UpFrom.RETRY);
     return upList.length;
   }
 
@@ -118,7 +126,7 @@ export class UpCrawler {
     const list = await this.upService.findNeedUpdate(2);
     await this.start(
       list.map((i) => i.mid),
-      JobUpFrom.UPDATE,
+      UpFrom.UPDATE,
     );
   }
 }
