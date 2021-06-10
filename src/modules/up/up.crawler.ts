@@ -1,6 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
@@ -13,21 +11,21 @@ import { HOUR, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { JobData, JobType, JobUpFrom } from '../../jobs/job.type';
 import { Cron } from '@nestjs/schedule';
+import { UpService } from './up.service';
 
 @Injectable()
 export class UpCrawler {
   private readonly logger = new Logger(UpCrawler.name);
 
   constructor(
-    @InjectRepository(UpEntity)
-    private readonly upRepository: Repository<UpEntity>,
     @InjectQueue('job') private jobQueue: Queue<JobData>,
     private readonly redisService: RedisService,
+    private readonly upService: UpService,
   ) {}
 
   async create(data: UpDto) {
     const { mid } = data;
-    const $data = await this.upRepository.findOne({ where: { mid } });
+    const $data = await this.upService.findByMid(mid);
     const $$data = await $val($data || new UpEntity(), data);
     if (data.type !== UpType.fail) {
       $$data.fail_msg = '';
@@ -37,14 +35,15 @@ export class UpCrawler {
     const redisKey = cacheName(CacheType.up, mid);
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, HOUR);
-    const saveData = await this.upRepository.save($$data);
+    const saveData = await this.upService.save($$data);
     this.logger.log(redisKey);
     return saveData;
   }
 
   async failFetch(mid: number, fail_msg: string) {
     errorLog([mid, fail_msg].join(' | '));
-    const $data = await this.upRepository.findOne({ where: { mid } });
+    const $data = await this.upService.findByMid(mid);
+
     if ($data) return;
     return this.create({
       type: UpType.fail,
@@ -106,9 +105,7 @@ export class UpCrawler {
 
   @Cron('0 0 * * * *')
   async retry() {
-    const list = await this.upRepository.find({
-      where: { type: UpType.fail + '' },
-    });
+    const list = await this.upService.findFail();
     const upList = list.map((i) => i.mid);
     await this.start(upList, JobUpFrom.RETRY);
     return upList.length;
@@ -118,15 +115,7 @@ export class UpCrawler {
   async update() {
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
-    const list = await this.upRepository.find({
-      where: {
-        type: UpType.normal + '',
-      },
-      order: {
-        updated: 'ASC',
-      },
-      take: 2,
-    });
+    const list = await this.upService.findNeedUpdate(2);
     await this.start(
       list.map((i) => i.mid),
       JobUpFrom.UPDATE,

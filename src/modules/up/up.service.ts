@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpEntity, UpType } from './up.entity';
-import { Repository } from 'typeorm';
+import { In, ObjectLiteral, Repository } from 'typeorm';
 import { listParams } from '../../util/mysql';
 import { Alias } from '../../type';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
@@ -32,5 +32,31 @@ export class UpService {
       where,
     });
     return { list, count };
+  }
+
+  async findByMid(mid: number) {
+    return await this.upRepository.findOne({ where: { mid } });
+  }
+
+  async save(data: ObjectLiteral) {
+    return await this.upRepository.save(data);
+  }
+
+  async findFail() {
+    return await this.upRepository.find({
+      where: { type: UpType.fail },
+    });
+  }
+
+  async findNeedUpdate(take = 2) {
+    return await this.upRepository.find({
+      where: {
+        type: In([UpType.normal]),
+      },
+      order: {
+        updated: 'ASC',
+      },
+      take,
+    });
   }
 }

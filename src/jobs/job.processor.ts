@@ -18,6 +18,7 @@ export class JobProcessor {
 
   @Process('crawler')
   async crawlerWork(job: Job<JobData>) {
+    console.log('crawler work');
     const { key, type } = job.data;
     const time = dayjs().get('hour');
     const isMidNight = time < 6;

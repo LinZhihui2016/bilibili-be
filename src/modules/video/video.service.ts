@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, ObjectLiteral, Repository } from 'typeorm';
 import { VideoEntity, VideoType } from './video.entity';
 import { listParams } from '../../util/mysql';
 import { Alias } from '../../type';
@@ -37,5 +37,31 @@ export class VideoService {
       where,
     });
     return { list, count };
+  }
+
+  async findByBvid(bvid: string) {
+    return await this.videoRepository.findOne({ where: { bvid } });
+  }
+
+  async save(data: ObjectLiteral) {
+    return await this.videoRepository.save(data);
+  }
+
+  async findFail() {
+    return await this.videoRepository.find({
+      where: { type: VideoType.fail },
+    });
+  }
+
+  async findNeedUpdate(take = 2) {
+    return await this.videoRepository.find({
+      where: {
+        type: In([VideoType.normal, VideoType.bangumi]),
+      },
+      order: {
+        updated: 'ASC',
+      },
+      take,
+    });
   }
 }

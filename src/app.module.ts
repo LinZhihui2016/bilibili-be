@@ -9,9 +9,11 @@ import { RedisModule } from 'nestjs-redis';
 import { JobProcessor } from './jobs/job.processor';
 import { BullModule } from '@nestjs/bull';
 import { UpModule } from './modules/up/up.module';
-import { JobModule } from './jobs/job.module';
 import { UserModule } from './modules/user/user.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { VideoCrawler } from './modules/video/video.crawler';
+import { UpCrawler } from './modules/up/up.crawler';
+import { JobCron } from './jobs/job.cron';
 
 @Module({
   imports: [
@@ -34,15 +36,17 @@ import { AdminModule } from './modules/admin/admin.module';
       },
       inject: [ConfigService],
     }),
+    BullModule.registerQueueAsync({
+      name: 'job',
+    }),
     ScheduleModule.forRoot(),
     RankModule,
     VideoModule,
     UpModule,
-    JobModule,
     UserModule,
     AdminModule,
     // AuthModule,
   ],
-  providers: [JobProcessor],
+  providers: [UpCrawler, VideoCrawler, JobProcessor, JobCron],
 })
 export class AppModule {}
