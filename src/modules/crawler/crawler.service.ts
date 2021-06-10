@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { JobStatus, Queue } from 'bull';
-import { JobData, JobType } from '../../jobs/job.type';
+import { JobData, CrawlerType } from './crawler.type';
 
 @Injectable()
-export class AdminService {
+export class CrawlerService {
   constructor(@InjectQueue('job') private jobQueue: Queue<JobData>) {}
 
   static pageParams<T>(arr: T[], opt: { pageSize: string; page: string }) {
@@ -16,7 +16,12 @@ export class AdminService {
     return arr.slice(page * pageSize, (page + 1) * pageSize);
   }
 
-  async getList(statusArr: JobStatus[], typeArr: JobType[], page, pageSize) {
+  async getList(
+    statusArr: JobStatus[],
+    typeArr: CrawlerType[],
+    page,
+    pageSize,
+  ) {
     const list = await this.jobQueue.getJobs(statusArr);
     const $listFilterByType = list
       .filter((i) => {
@@ -39,7 +44,7 @@ export class AdminService {
         };
       });
     return {
-      list: AdminService.pageParams($listFilterByType, { page, pageSize }),
+      list: CrawlerService.pageParams($listFilterByType, { page, pageSize }),
       count: $listFilterByType.length,
     };
   }

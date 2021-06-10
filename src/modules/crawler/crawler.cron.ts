@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { JobData } from './job.type';
+import { JobData } from './crawler.type';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
-export class JobCron {
+export class CrawlerCron {
   constructor(@InjectQueue('job') private jobQueue: Queue<JobData>) {}
 
   @Cron('0 0 * * * *')

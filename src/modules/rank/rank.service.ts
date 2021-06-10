@@ -8,9 +8,9 @@ import { Queue } from 'bull';
 import {
   JobData,
   JobRankFrom,
-  JobType,
+  CrawlerType,
   JobVideoFrom,
-} from '../../jobs/job.type';
+} from '../crawler/crawler.type';
 import { Cron } from '@nestjs/schedule';
 import { RankDto } from './rank.dto';
 import { $val } from '../../util/mysql';
@@ -94,7 +94,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.VIDEO, key, from: JobVideoFrom.RANK },
+        data: { type: CrawlerType.VIDEO, key, from: JobVideoFrom.RANK },
       })),
     );
     return this.create({
@@ -113,7 +113,7 @@ export class RankService {
     await this.jobQueue.addBulk(
       rankIdList.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.RANK, key, from: JobRankFrom.CRON },
+        data: { type: CrawlerType.RANK, key, from: JobRankFrom.CRON },
       })),
     );
   }

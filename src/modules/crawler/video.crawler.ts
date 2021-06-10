@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { VideoEntity, VideoType } from './video.entity';
+import { VideoEntity, VideoType } from '../video/video.entity';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
@@ -10,16 +10,16 @@ import {
   VideoBangumiDto,
   VideoDto,
   VideoNormalDto,
-} from './video.dto';
+} from '../video/video.dto';
 import dayjs from 'dayjs';
-import { JobData, JobType, JobUpFrom, JobVideoFrom } from '../../jobs/job.type';
+import { JobData, CrawlerType, JobUpFrom, JobVideoFrom } from './crawler.type';
 import { $val } from '../../util/mysql';
 import { RedisService } from 'nestjs-redis';
 import { cacheName, CacheType } from '../../util/redis';
 import { HOUR } from '../../util/date';
 import { errorLog } from '../../log4js/log';
 import { Cron } from '@nestjs/schedule';
-import { VideoService } from './video.service';
+import { VideoService } from '../video/video.service';
 
 @Injectable()
 export class VideoCrawler {
@@ -113,7 +113,7 @@ export class VideoCrawler {
           type: VideoType.normal,
         };
         await this.jobQueue.add('crawler', {
-          type: JobType.UP,
+          type: CrawlerType.UP,
           key: +mid,
           from: JobUpFrom.VIDEO,
         });
@@ -151,7 +151,7 @@ export class VideoCrawler {
           up_mid: upInfo.mid,
         };
         await this.jobQueue.add('crawler', {
-          type: JobType.UP,
+          type: CrawlerType.UP,
           key: +upInfo.mid,
           from: JobUpFrom.VIDEO,
         });
@@ -166,7 +166,7 @@ export class VideoCrawler {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.VIDEO, key, from },
+        data: { type: CrawlerType.VIDEO, key, from },
       })),
     );
   }

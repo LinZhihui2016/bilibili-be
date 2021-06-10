@@ -2,16 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
-import { UpEntity, UpType } from './up.entity';
+import { UpEntity, UpType } from '../up/up.entity';
 import { cacheName, CacheType } from '../../util/redis';
-import { UpBaseDto, UpDto } from './up.dto';
+import { UpBaseDto, UpDto } from '../up/up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
 import { HOUR, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
-import { JobData, JobType, JobUpFrom } from '../../jobs/job.type';
+import { CrawlerType, JobData, JobUpFrom } from './crawler.type';
 import { Cron } from '@nestjs/schedule';
-import { UpService } from './up.service';
+import { UpService } from '../up/up.service';
 
 @Injectable()
 export class UpCrawler {
@@ -98,7 +98,7 @@ export class UpCrawler {
     await this.jobQueue.addBulk(
       list.map((key) => ({
         name: 'crawler',
-        data: { type: JobType.UP, key, from },
+        data: { type: CrawlerType.UP, key, from },
       })),
     );
   }

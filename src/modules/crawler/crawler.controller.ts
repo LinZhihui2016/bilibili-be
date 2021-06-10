@@ -6,21 +6,25 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
+import { CrawlerService } from './crawler.service';
 import { JwtGuard } from '../../jwt/jwt.guard';
-import { JobType } from '../../jobs/job.type';
+import { CrawlerType } from './crawler.type';
 import { JobStatus } from 'bull';
 import { Checkbox } from '../../util/checkbox';
 
 const jobStatus: JobStatus[] = ['completed', 'waiting', 'failed'];
-const jobType: JobType[] = [JobType.RANK, JobType.VIDEO, JobType.UP];
+const jobType: CrawlerType[] = [
+  CrawlerType.RANK,
+  CrawlerType.VIDEO,
+  CrawlerType.UP,
+];
 
 @Controller('api3/admin')
-export class AdminController {
+export class CrawlerController {
   jobStatus = new Checkbox<JobStatus>(jobStatus);
-  jobType = new Checkbox<JobType>(jobType);
+  jobType = new Checkbox<CrawlerType>(jobType);
 
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: CrawlerService) {}
 
   @Get('enum/list')
   enum() {
