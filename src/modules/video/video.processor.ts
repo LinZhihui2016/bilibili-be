@@ -19,7 +19,7 @@ export class VideoProcessor {
 
   @Process('videoCrawler')
   async active(job: Job<VideoJob>) {
-    const { key } = job.data;
-    await this.videoCrawler.fetch(key as string);
+    const { key, from } = job.data;
+    await this.videoCrawler.fetch(key as string, from);
   }
 }

@@ -75,7 +75,7 @@ export class VideoCrawler {
     });
   }
 
-  async fetch(bv: string) {
+  async fetch(bv: string, from: VideoFrom) {
     const redisKey = cacheName(CacheType.video, bv);
     const data = await this.redisService.getClient().get(redisKey);
     if (data) return this.create(JSON.parse(data) as VideoDto);
@@ -127,7 +127,7 @@ export class VideoCrawler {
           likes: like,
           type: VideoType.normal,
         };
-        await this.fetchUp(+mid);
+        from === VideoFrom.RANK && (await this.fetchUp(+mid));
         return this.create(normalBv);
       } else if ('mediaInfo' in json) {
         const {
@@ -161,7 +161,7 @@ export class VideoCrawler {
           up_name: upInfo.name,
           up_mid: upInfo.mid,
         };
-        await this.fetchUp(+upInfo.mid);
+        from === VideoFrom.RANK && (await this.fetchUp(+upInfo.mid));
         return this.create(bangumiBv);
       }
     } catch (e) {
