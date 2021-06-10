@@ -21,6 +21,7 @@ import cheerio from 'cheerio';
 import dayjs from 'dayjs';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from '../up/up.processor';
+import { MagicNumber } from '../../util/magicNumber';
 
 @Injectable()
 export class VideoCrawler {
@@ -193,7 +194,9 @@ export class VideoCrawler {
   async update() {
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
-    const list = await this.videoService.findNeedUpdate(10);
+    const list = await this.videoService.findNeedUpdate(
+      MagicNumber.VIDEO_UPDATE_PER_MIN,
+    );
     await this.start(
       list.map((i) => i.bvid),
       VideoFrom.UPDATE,

@@ -2,6 +2,7 @@ import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { PRes, Type } from 'src/type';
 import axiosRetry from 'axios-retry';
 import { errorLog } from '../log4js/log';
+import { MagicNumber } from '../util/magicNumber';
 
 export default class NodeAxios {
   axiosInstance: AxiosInstance;
@@ -11,9 +12,9 @@ export default class NodeAxios {
     this.options = options;
     this.axiosInstance = Axios.create({ ...options });
     axiosRetry(this.axiosInstance, {
-      retries: 3,
+      retries: MagicNumber.AXIOS_RETRY,
       shouldResetTimeout: true,
-      retryDelay: () => 5000,
+      retryDelay: () => MagicNumber.AXIOS_RETRY_DELAY,
       retryCondition: (error) => {
         errorLog(error.config.url + ' retry');
         return true;

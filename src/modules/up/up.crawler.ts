@@ -12,6 +12,7 @@ import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
+import { MagicNumber } from '../../util/magicNumber';
 
 @Injectable()
 export class UpCrawler {
@@ -123,7 +124,9 @@ export class UpCrawler {
   async update() {
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
-    const list = await this.upService.findNeedUpdate(2);
+    const list = await this.upService.findNeedUpdate(
+      MagicNumber.UP_UPDATE_PER_MIN,
+    );
     await this.start(
       list.map((i) => i.mid),
       UpFrom.UPDATE,
