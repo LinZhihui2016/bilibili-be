@@ -4,7 +4,7 @@ import { Type } from '../type';
 export const logInit = () =>
   log4js.configure({
     appenders: {
-      error: { type: 'dateFile', filename: 'log/error.log' },
+      error: { type: 'dateFile', filename: '/tmp/bilibili_log/error.log' },
     },
     categories: {
       error: { appenders: ['error'], level: 'error' },
