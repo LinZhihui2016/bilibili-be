@@ -111,12 +111,15 @@ export class UpCrawler {
     );
   }
 
-  @Cron('0 0 * * * *')
-  async retry() {
+  @Cron('0 */5 * * * *')
+  async resume() {
     const isPaused = await this.jobQueue.isPaused();
     if (isPaused) {
       await this.jobQueue.resume();
     }
+  }
+  @Cron('0 0 * * * *')
+  async retry() {
     const jobs = await this.jobQueue.getFailed();
     await this.jobQueue.clean(1000, 'failed');
     await this.jobQueue.clean(1000, 'completed');
