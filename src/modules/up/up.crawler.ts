@@ -48,6 +48,9 @@ export class UpCrawler {
 
   async failFetch(mid: number, fail_msg: string) {
     errorLog([mid, fail_msg].join(' | '));
+    if (fail_msg === 'Error: Request failed with status code 412') {
+      await this.jobQueue.pause();
+    }
     const $data = await this.upService.findByMid(mid);
     if ($data) return;
     return this.create({
@@ -110,6 +113,10 @@ export class UpCrawler {
 
   @Cron('0 0 * * * *')
   async retry() {
+    const isPaused = await this.jobQueue.isPaused();
+    if (isPaused) {
+      await this.jobQueue.resume();
+    }
     const jobs = await this.jobQueue.getFailed();
     await this.jobQueue.clean(1000, 'failed');
     await this.jobQueue.clean(1000, 'completed');
