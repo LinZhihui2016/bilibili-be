@@ -65,9 +65,10 @@ export class VideoCrawler {
   }
 
   async failFetch(bvid: string, fail_msg: string) {
+    errorLog([bvid, fail_msg].join(' | '));
+    await this.jobQueue.pause();
     const $data = await this.videoService.findByBvid(bvid);
     if ($data) return;
-    errorLog([bvid, fail_msg].join(' | '));
     return this.create({
       type: VideoType.fail,
       bvid,
@@ -177,7 +178,13 @@ export class VideoCrawler {
       })),
     );
   }
-
+  @Cron('0 */5 * * * *')
+  async resume() {
+    const isPaused = await this.jobQueue.isPaused();
+    if (isPaused) {
+      await this.jobQueue.resume();
+    }
+  }
   @Cron('0 0 * * * *')
   async retry() {
     const jobs = await this.jobQueue.getFailed();
@@ -192,6 +199,8 @@ export class VideoCrawler {
 
   @Cron('30 * * * * *')
   async update() {
+    const isPaused = await this.jobQueue.isPaused();
+    if (isPaused) return;
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
     const list = await this.videoService.findNeedUpdate(

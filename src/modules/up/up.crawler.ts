@@ -132,6 +132,8 @@ export class UpCrawler {
 
   @Cron('0 * * * * *')
   async update() {
+    const isPaused = await this.jobQueue.isPaused();
+    if (isPaused) return;
     const waitCount = await this.jobQueue.getWaitingCount();
     if (waitCount > 100) return;
     const list = await this.upService.findNeedUpdate(
