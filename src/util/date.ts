@@ -45,3 +45,9 @@ export const sleep = (ms: number) => {
 export const MINUTE = 60;
 export const HOUR = MINUTE * 60;
 export const DAY = HOUR * 24;
+
+export const expireTime = (time: number) => {
+  const rd = Math.floor(Math.random() * 1000);
+  const symbol = Math.random() > 0.5 ? 1 : -1;
+  return time + rd * symbol;
+};

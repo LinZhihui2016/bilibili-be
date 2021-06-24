@@ -14,7 +14,7 @@ import {
 import { $val } from '../../util/mysql';
 import { VideoEntity, VideoType } from './video.entity';
 import { cacheName, CacheType } from '../../util/redis';
-import { HOUR, sleep } from '../../util/date';
+import { expireTime, HOUR, sleep } from '../../util/date';
 import { errorLog } from '../../log4js/log';
 import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
 import cheerio from 'cheerio';
@@ -55,7 +55,7 @@ export class VideoCrawler {
     const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.video, bvid);
     await redis.set(redisKey, JSON.stringify($$data));
-    await redis.expire(redisKey, HOUR);
+    await redis.expire(redisKey, expireTime(HOUR));
     const saveData = await this.videoService.save($$data);
     this.log(redisKey, from);
     if (from === 'crawler') {
