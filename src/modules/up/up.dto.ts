@@ -22,4 +22,10 @@ export class UpFailDto {
   fail_msg: string;
 }
 
-export type UpDto = UpBaseDto | UpFailDto;
+export class UpDeletedDto {
+  @IsNumber()
+  mid: number;
+
+  type: UpType.deleted;
+}
+export type UpDto = UpBaseDto | UpFailDto | UpDeletedDto;

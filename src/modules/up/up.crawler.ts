@@ -64,9 +64,11 @@ export class UpCrawler {
     const redisKey = cacheName(CacheType.up, mid);
     const data = await this.redisService.getClient().get(redisKey);
     if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
-
     const [e1, info] = await apiUserInfo(mid);
     if (e1) return this.failFetch(mid, e1.toString());
+    if (info.code === -404) {
+      return this.create({ type: UpType.deleted, mid });
+    }
     await sleep(300);
     const [e2, stat] = await apiUserStat(mid);
     if (e2) return this.failFetch(mid, e2.toString());

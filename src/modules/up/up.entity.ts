@@ -4,6 +4,7 @@ import { $BaseEntity } from '../../util/entity';
 export enum UpType {
   normal = 'normal',
   fail = 'fail',
+  deleted = 'deleted',
 }
 
 @Entity({ name: 'up' })
