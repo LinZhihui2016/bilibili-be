@@ -7,13 +7,12 @@ import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
-import { DAY, expireTime, MINUTE, sleep } from '../../util/date';
+import { expireTime, MINUTE, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
 import { MagicNumber } from '../../util/magicNumber';
-import dayjs from 'dayjs';
 
 @Injectable()
 export class UpCrawler {
@@ -35,7 +34,7 @@ export class UpCrawler {
       $$data.fail_msg = '';
     }
     $$data.crawlerTimes = ($$data.crawlerTimes || 0) + 1;
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient('upCache');
     const redisKey = cacheName(CacheType.up, mid);
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, expireTime(MINUTE * 10));
@@ -63,34 +62,19 @@ export class UpCrawler {
 
   async fetch(mid: number) {
     const redisKey = cacheName(CacheType.up, mid);
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient('upCache');
     const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
     const [e1, info] = await apiUserInfo(mid);
-    await this.logByRedis(
-      'info',
-      mid,
-      e1 ? e1.toString() : JSON.stringify(info),
-    );
     if (e1) return this.failFetch(mid, e1.toString());
     if (info.code === -404) {
       return this.create({ type: UpType.deleted, mid });
     }
     await sleep(300);
     const [e2, stat] = await apiUserStat(mid);
-    await this.logByRedis(
-      'stat',
-      mid,
-      e2 ? e2.toString() : JSON.stringify(stat),
-    );
     if (e2) return this.failFetch(mid, e2.toString());
     await sleep(300);
     const [e3, upstat] = await apiUserUpstat(mid);
-    await this.logByRedis(
-      'upstat',
-      mid,
-      e3 ? e3.toString() : JSON.stringify(upstat),
-    );
     if (e3) return this.failFetch(mid, e3.toString());
     try {
       const {
@@ -128,14 +112,6 @@ export class UpCrawler {
         data: { key, from },
       })),
     );
-  }
-
-  async logByRedis(type: string, mid: number, context: string) {
-    const redis = this.redisService.getClient('upCache');
-    const day = dayjs().format('MM-DD');
-    const key = `log:up:${day}:${mid}:${type}`;
-    await redis.set(key, context);
-    await redis.expire(key, expireTime(DAY * 3));
   }
 
   @Cron('0 */5 * * * *')
