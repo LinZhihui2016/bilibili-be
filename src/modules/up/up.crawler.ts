@@ -7,7 +7,7 @@ import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
-import { expireTime, HOUR, sleep, WEEK } from '../../util/date';
+import { expireTime, MINUTE, sleep, WEEK } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
@@ -39,7 +39,7 @@ export class UpCrawler {
     const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.up, mid);
     await redis.set(redisKey, JSON.stringify($$data));
-    await redis.expire(redisKey, expireTime(HOUR));
+    await redis.expire(redisKey, expireTime(MINUTE * 10));
     const saveData = await this.upService.save($$data);
     this.log(redisKey, from);
     if (from === 'crawler') {
