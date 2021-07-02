@@ -52,7 +52,7 @@ export class VideoCrawler {
       $$data.fail_msg = '';
     }
     $$data.crawlerTimes = ($$data.crawlerTimes || 0) + 1;
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.video, bvid);
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, expireTime(MINUTE * 10));
@@ -78,7 +78,7 @@ export class VideoCrawler {
 
   async fetch(bv: string, from: VideoFrom) {
     const redisKey = cacheName(CacheType.video, bv);
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient();
     const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as VideoDto);
     const [err, html] = await apiBvHtml(bv);
@@ -182,9 +182,9 @@ export class VideoCrawler {
   }
 
   async logByRedis(bvid: string, context: string) {
-    const redis = this.redisService.getClient('videoCache');
+    const redis = this.redisService.getClient();
     const day = dayjs().format('MM-DD');
-    const key = `${day}:log:video:${bvid}`;
+    const key = `log:video:${day}:${bvid}`;
     await redis.set(key, context);
     await redis.expire(key, expireTime(WEEK));
   }

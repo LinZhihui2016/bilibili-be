@@ -27,19 +27,7 @@ import { RankModule } from './modules/rank/rank.module';
     }),
     RedisModule.forRootAsync({
       useFactory: (config: ConfigService) => {
-        return config.get('redis')[0];
-      },
-      inject: [ConfigService],
-    }),
-    RedisModule.forRootAsync({
-      useFactory: (config: ConfigService) => {
-        return config.get('redis')[1];
-      },
-      inject: [ConfigService],
-    }),
-    RedisModule.forRootAsync({
-      useFactory: (config: ConfigService) => {
-        return config.get('redis')[2];
+        return config.get('redis');
       },
       inject: [ConfigService],
     }),

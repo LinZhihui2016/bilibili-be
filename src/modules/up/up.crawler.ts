@@ -35,7 +35,7 @@ export class UpCrawler {
       $$data.fail_msg = '';
     }
     $$data.crawlerTimes = ($$data.crawlerTimes || 0) + 1;
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient();
     const redisKey = cacheName(CacheType.up, mid);
     await redis.set(redisKey, JSON.stringify($$data));
     await redis.expire(redisKey, expireTime(MINUTE * 10));
@@ -63,7 +63,7 @@ export class UpCrawler {
 
   async fetch(mid: number) {
     const redisKey = cacheName(CacheType.up, mid);
-    const redis = this.redisService.getClient('sqlCache');
+    const redis = this.redisService.getClient();
     const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
     const [e1, info] = await apiUserInfo(mid);
@@ -131,9 +131,9 @@ export class UpCrawler {
   }
 
   async logByRedis(type: string, mid: number, context: string) {
-    const redis = this.redisService.getClient('upCache');
+    const redis = this.redisService.getClient();
     const day = dayjs().format('MM-DD');
-    const key = `${day}:log:up:${type}:${mid}`;
+    const key = `log:up:${day}:${mid}:${type}`;
     await redis.set(key, context);
     await redis.expire(key, expireTime(WEEK));
   }
