@@ -14,7 +14,7 @@ import {
 import { $val } from '../../util/mysql';
 import { VideoEntity, VideoType } from './video.entity';
 import { cacheName, CacheType } from '../../util/redis';
-import { expireTime, HOUR, sleep } from '../../util/date';
+import { expireTime, HOUR, sleep, WEEK } from '../../util/date';
 import { errorLog } from '../../log4js/log';
 import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
 import cheerio from 'cheerio';
@@ -22,6 +22,7 @@ import dayjs from 'dayjs';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from '../up/up.processor';
 import { MagicNumber } from '../../util/magicNumber';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class VideoCrawler {
@@ -78,9 +79,11 @@ export class VideoCrawler {
 
   async fetch(bv: string, from: VideoFrom) {
     const redisKey = cacheName(CacheType.video, bv);
-    const data = await this.redisService.getClient().get(redisKey);
+    const redis = this.redisService.getClient();
+    const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as VideoDto);
     const [err, html] = await apiBvHtml(bv);
+    await this.logByRedis(redis, bv, err ? err.toString() : html);
     if (err) return this.failFetch(bv, err.toString());
     const $ = cheerio.load(html);
     if ($('.error-body .error-text').text()) {
@@ -178,6 +181,14 @@ export class VideoCrawler {
       })),
     );
   }
+
+  async logByRedis(redis: Redis, bvid: string, context: string) {
+    const day = dayjs().format('YYYY-MM-DD');
+    const key = `${day}:log:video:${bvid}`;
+    await redis.set(key, context);
+    await redis.expire(key, expireTime(WEEK));
+  }
+
   @Cron('0 */5 * * * *')
   async resume() {
     const isPaused = await this.jobQueue.isPaused();

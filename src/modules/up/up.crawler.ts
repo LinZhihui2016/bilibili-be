@@ -7,12 +7,14 @@ import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
-import { expireTime, HOUR, sleep } from '../../util/date';
+import { expireTime, HOUR, sleep, WEEK } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
 import { MagicNumber } from '../../util/magicNumber';
+import { Redis } from 'ioredis';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UpCrawler {
@@ -62,18 +64,37 @@ export class UpCrawler {
 
   async fetch(mid: number) {
     const redisKey = cacheName(CacheType.up, mid);
-    const data = await this.redisService.getClient().get(redisKey);
+    const redis = this.redisService.getClient();
+    const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
     const [e1, info] = await apiUserInfo(mid);
+    await this.logByRedis(
+      redis,
+      'info',
+      mid,
+      e1 ? e1.toString() : JSON.stringify(info),
+    );
     if (e1) return this.failFetch(mid, e1.toString());
     if (info.code === -404) {
       return this.create({ type: UpType.deleted, mid });
     }
     await sleep(300);
     const [e2, stat] = await apiUserStat(mid);
+    await this.logByRedis(
+      redis,
+      'stat',
+      mid,
+      e2 ? e2.toString() : JSON.stringify(stat),
+    );
     if (e2) return this.failFetch(mid, e2.toString());
     await sleep(300);
     const [e3, upstat] = await apiUserUpstat(mid);
+    await this.logByRedis(
+      redis,
+      'upstat',
+      mid,
+      e3 ? e3.toString() : JSON.stringify(upstat),
+    );
     if (e3) return this.failFetch(mid, e3.toString());
     try {
       const {
@@ -111,6 +132,13 @@ export class UpCrawler {
         data: { key, from },
       })),
     );
+  }
+
+  async logByRedis(redis: Redis, type: string, mid: number, context: string) {
+    const day = dayjs().format('YYYY-MM-DD');
+    const key = `${day}:log:up:${mid}:${type}`;
+    await redis.set(key, context);
+    await redis.expire(key, expireTime(WEEK));
   }
 
   @Cron('0 */5 * * * *')

@@ -20,6 +20,7 @@ export const logInit = () =>
 
 export const errorLog = (msg: Type.Obj<any> | string) => {
   const logger = new Logger('errorLog');
+  log4js.getLogger('error').error(msg);
   logger.error(msg);
   return errorLog;
 };
