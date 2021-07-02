@@ -27,11 +27,22 @@ import { RankModule } from './modules/rank/rank.module';
     }),
     RedisModule.forRootAsync({
       useFactory: (config: ConfigService) => {
-        return config.get('redis');
+        return config.get('redis')[0];
       },
       inject: [ConfigService],
     }),
-
+    RedisModule.forRootAsync({
+      useFactory: (config: ConfigService) => {
+        return config.get('redis')[1];
+      },
+      inject: [ConfigService],
+    }),
+    RedisModule.forRootAsync({
+      useFactory: (config: ConfigService) => {
+        return config.get('redis')[2];
+      },
+      inject: [ConfigService],
+    }),
     ScheduleModule.forRoot(),
     UserModule,
     // CrawlerModule,
