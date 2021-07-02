@@ -7,14 +7,13 @@ import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
-import { expireTime, MINUTE, sleep, WEEK } from '../../util/date';
+import { expireTime, MINUTE, sleep } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
 import { MagicNumber } from '../../util/magicNumber';
 import { Redis } from 'ioredis';
-import dayjs from 'dayjs';
 
 @Injectable()
 export class UpCrawler {
@@ -135,10 +134,13 @@ export class UpCrawler {
   }
 
   async logByRedis(redis: Redis, type: string, mid: number, context: string) {
-    const day = dayjs().format('YYYY-MM-DD');
-    const key = `${day}:log:up:${mid}:${type}`;
+    const key = `log:up:${type}`;
     await redis.set(key, context);
-    await redis.expire(key, expireTime(WEEK));
+    const len = await redis.hlen(key);
+    if (len > 100) {
+      await redis.del(key);
+    }
+    await redis.hset(key, mid, context);
   }
 
   @Cron('0 */5 * * * *')
@@ -153,7 +155,6 @@ export class UpCrawler {
     const jobs = await this.jobQueue.getFailed();
     await this.jobQueue.clean(1000, 'failed');
     await this.jobQueue.clean(1000, 'completed');
-
     const list = await this.upService.findFail();
     const upList = list.map((i) => i.mid).concat(jobs.map((j) => j.data.key));
     await this.start(upList, UpFrom.RETRY);
