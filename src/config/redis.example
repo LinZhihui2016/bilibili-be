@@ -1,7 +1,10 @@
 import { RedisModuleOptions } from 'nestjs-redis/dist/redis.interface';
-const config: RedisModuleOptions = {
-  port: *,
-  host: '*.*.*.*',
-  db: 0,
-};
+const config: RedisModuleOptions[] = ['sqlCache', 'videoCache', 'upCache'].map(
+  (name, db) => ({
+    db,
+    name,
+    port: 6379,
+    host: '*',
+  }),
+);
 export default config;
