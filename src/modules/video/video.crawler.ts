@@ -226,7 +226,7 @@ export class VideoCrawler {
     const redis = this.redisService.getClient('log');
     const KEY = `video:step`;
     const len = await redis.llen(KEY);
-    if (len >= 30) {
+    if (len >= 300) {
       await redis.lpop(KEY);
     }
     await redis.lpush(KEY, `${bv}:${step}:${status}`);

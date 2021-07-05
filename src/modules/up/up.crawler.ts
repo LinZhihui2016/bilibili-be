@@ -159,7 +159,7 @@ export class UpCrawler {
     const redis = this.redisService.getClient('log');
     const KEY = `up:step`;
     const len = await redis.llen(KEY);
-    if (len >= 30) {
+    if (len >= 300) {
       await redis.lpop(KEY);
     }
     await redis.lpush(KEY, `${mid}:${step}:${status}`);
