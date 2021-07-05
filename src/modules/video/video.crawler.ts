@@ -16,12 +16,12 @@ import { VideoEntity, VideoType } from './video.entity';
 import { cacheName, CacheType } from '../../util/redis';
 import { expireTime, MINUTE, sleep, WEEK } from '../../util/date';
 import { errorLog } from '../../log4js/log';
-import { apiBvHtml, apiPgcInfo } from '../../crawler/video';
 import cheerio from 'cheerio';
 import dayjs from 'dayjs';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from '../up/up.processor';
 import { MagicNumber } from '../../util/magicNumber';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Injectable()
 export class VideoCrawler {
@@ -38,6 +38,7 @@ export class VideoCrawler {
     private upJobQueue: Queue<UpJob>,
     private readonly redisService: RedisService,
     private readonly videoService: VideoService,
+    private crawlerService: CrawlerService,
   ) {}
 
   async fetchUp(mid: number) {
@@ -85,8 +86,9 @@ export class VideoCrawler {
     const redis = this.redisService.getClient('videoCache');
     const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as VideoDto);
-    const [err, html] = await apiBvHtml(bv);
+    const [err, html] = await this.crawlerService.apiBvHtml(bv);
     if (err) return this.failFetch(bv, err.toString());
+    await this.logStep('fetch', 'end', bv);
     const $ = cheerio.load(html);
     if ($('.error-body .error-text').text()) {
       return this.create({ type: VideoType.deleted, bvid: bv });
@@ -141,7 +143,7 @@ export class VideoCrawler {
           epInfo: { id, aid, bvid, cover: pic },
           mediaInfo: { upInfo },
         } = json;
-        const [err, info] = await apiPgcInfo(id);
+        const [err, info] = await this.crawlerService.apiPgcInfo(id);
         if (err)
           return this.create({
             type: VideoType.fail,

@@ -8,9 +8,9 @@ import { RankEntity, RankId } from './rank.entity';
 import { RankService } from './rank.service';
 import dayjs from 'dayjs';
 import { Connection } from 'typeorm';
-import { apiRank } from '../../crawler/ranking';
 import { RankFrom, RankJob } from './rank.processor';
 import { Cron } from '@nestjs/schedule';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Injectable()
 export class RankCrawler {
@@ -19,6 +19,7 @@ export class RankCrawler {
     @InjectQueue('video') private videoJobQueue: Queue<VideoJob>,
     private readonly rankService: RankService,
     private connection: Connection,
+    private crawlerService: CrawlerService,
   ) {}
 
   async create(data: RankDto) {
@@ -72,7 +73,7 @@ export class RankCrawler {
   }
 
   async fetch(rid: RankId) {
-    const [err, data] = await apiRank(rid);
+    const [err, data] = await this.crawlerService.apiRank(rid);
     if (err) {
       return this.create({
         rid,

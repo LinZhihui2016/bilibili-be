@@ -6,7 +6,6 @@ import { UpEntity, UpType } from './up.entity';
 import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
-import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
 import { expireTime, MINUTE, sleep, WEEK } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
@@ -14,6 +13,7 @@ import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
 import { MagicNumber } from '../../util/magicNumber';
 import dayjs from 'dayjs';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Injectable()
 export class UpCrawler {
@@ -25,6 +25,7 @@ export class UpCrawler {
     @InjectQueue('up') private jobQueue: Queue<UpJob>,
     private readonly redisService: RedisService,
     private readonly upService: UpService,
+    private crawlerService: CrawlerService,
   ) {}
 
   async create(data: UpDto, from = 'crawler') {
@@ -70,16 +71,16 @@ export class UpCrawler {
     const redis = this.redisService.getClient('upCache');
     const data = await redis.get(redisKey);
     if (data) return this.create(JSON.parse(data) as UpDto, 'redis');
-    const [e1, info] = await apiUserInfo(mid);
+    const [e1, info] = await this.crawlerService.apiUserInfo(mid);
     if (e1) return this.failFetch(mid, e1.toString());
     if (info.code === -404) {
       return this.create({ type: UpType.deleted, mid });
     }
     await sleep(300);
-    const [e2, stat] = await apiUserStat(mid);
+    const [e2, stat] = await this.crawlerService.apiUserStat(mid);
     if (e2) return this.failFetch(mid, e2.toString());
     await sleep(300);
-    const [e3, upstat] = await apiUserUpstat(mid);
+    const [e3, upstat] = await this.crawlerService.apiUserUpstat(mid);
     if (e3) return this.failFetch(mid, e3.toString());
     try {
       const {
@@ -104,6 +105,7 @@ export class UpCrawler {
         mid,
         type: UpType.normal,
       };
+      await this.logStep('fetch', 'end', mid);
       return this.create(normalUp);
     } catch (e) {
       return this.failFetch(mid, e.message);

@@ -9,7 +9,7 @@ import { UserModule } from './modules/user/user.module';
 import { UpModule } from './modules/up/up.module';
 import { VideoModule } from './modules/video/video.module';
 import { RankModule } from './modules/rank/rank.module';
-
+import { CrawlerModule } from './modules/crawler/crawler.module';
 @Module({
   imports: [
     ConfigModule.load(resolve(__dirname, 'config', '!(*.d).{ts,js}')),
@@ -33,10 +33,10 @@ import { RankModule } from './modules/rank/rank.module';
     }),
     ScheduleModule.forRoot(),
     UserModule,
-    // CrawlerModule,
     UpModule,
     VideoModule,
     RankModule,
+    CrawlerModule,
   ],
 })
 export class AppModule {}

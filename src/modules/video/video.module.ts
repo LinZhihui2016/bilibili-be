@@ -6,6 +6,7 @@ import { VideoService } from './video.service';
 import { BullModule } from '@nestjs/bull';
 import { VideoProcessor } from './video.processor';
 import { VideoCrawler } from './video.crawler';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { VideoCrawler } from './video.crawler';
     BullModule.registerQueueAsync({ name: 'video' }, { name: 'up' }),
   ],
   controllers: [VideoController],
-  providers: [VideoProcessor, VideoService, VideoCrawler],
+  providers: [VideoProcessor, VideoService, VideoCrawler, CrawlerService],
   exports: [VideoService],
 })
 export class VideoModule {}

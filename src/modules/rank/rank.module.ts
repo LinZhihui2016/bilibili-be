@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { RankProcessor } from './rank.processor';
 import { RankCrawler } from './rank.crawler';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { RankCrawler } from './rank.crawler';
     TypeOrmModule.forFeature([RankEntity]),
   ],
   controllers: [RankController],
-  providers: [RankService, RankProcessor, RankCrawler],
+  providers: [RankService, RankProcessor, RankCrawler, CrawlerService],
   exports: [RankService],
 })
 export class RankModule {}

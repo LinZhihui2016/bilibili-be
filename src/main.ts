@@ -7,7 +7,6 @@ import { ResponseInterceptor } from './interceptor/responseInterceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   const swaggerOptions = new DocumentBuilder()
     .setTitle('nest-starter api document')
     .setDescription('nest starter project api document')

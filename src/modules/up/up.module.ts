@@ -6,6 +6,7 @@ import { UpService } from './up.service';
 import { BullModule } from '@nestjs/bull';
 import { UpProcessor } from './up.processor';
 import { UpCrawler } from './up.crawler';
+import { CrawlerService } from '../crawler/crawler.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { UpCrawler } from './up.crawler';
     }),
   ],
   controllers: [UpController],
-  providers: [UpService, UpProcessor, UpCrawler],
+  providers: [UpService, UpProcessor, UpCrawler, CrawlerService],
   exports: [UpService],
 })
 export class UpModule {}
