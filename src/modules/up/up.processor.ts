@@ -1,6 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { UpCrawler } from './up.crawler';
+import { RedisService } from 'nestjs-redis';
 
 export enum UpFrom {
   VIDEO = 'video',
@@ -15,12 +16,24 @@ export interface UpJob {
 
 @Processor('up')
 export class UpProcessor {
-  constructor(private readonly upCrawler: UpCrawler) {}
+  constructor(
+    private readonly upCrawler: UpCrawler,
+    private readonly redisService: RedisService,
+  ) {}
 
   @Process('upCrawler')
   async active(job: Job<UpJob>) {
     const { key } = job.data;
     const mid = +key;
+    setTimeout(async () => {
+      if (!(await job.isCompleted())) {
+        await job.moveToFailed({ message: 'time out' });
+        const redis = this.redisService.getClient('log');
+        await redis.set(`up:${key}`, 'time out');
+      }
+    }, 10000);
+    await this.upCrawler.logStep('active', 'start', key);
     await this.upCrawler.fetch(mid);
+    await this.upCrawler.logStep('active', 'end', key);
   }
 }

@@ -1,5 +1,5 @@
 import { RedisModuleOptions } from 'nestjs-redis/dist/redis.interface';
-const config: RedisModuleOptions[] = ['sqlCache', 'videoCache', 'upCache'].map(
+const config: RedisModuleOptions[] = ['videoCache', 'upCache','log'].map(
   (name, db) => ({
     db,
     name,

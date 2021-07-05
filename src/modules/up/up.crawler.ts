@@ -28,6 +28,7 @@ export class UpCrawler {
 
   async create(data: UpDto, from = 'crawler') {
     const { mid } = data;
+    await this.logStep('create', 'start', mid);
     const $data = await this.upService.findByMid(mid);
     const $$data = await $val($data || new UpEntity(), data);
     if (data.type !== UpType.fail) {
@@ -43,10 +44,12 @@ export class UpCrawler {
     if (from === 'crawler') {
       await sleep(10000);
     }
+    await this.logStep('create', 'end', mid);
     return saveData;
   }
 
   async failFetch(mid: number, fail_msg: string) {
+    await this.logStep('fetchFail', 'start', mid);
     errorLog([mid, fail_msg].join(' | '));
     if (fail_msg === 'Error: Request failed with status code 412') {
       await this.jobQueue.pause();
@@ -61,6 +64,7 @@ export class UpCrawler {
   }
 
   async fetch(mid: number) {
+    await this.logStep('fetch', 'start', mid);
     const redisKey = cacheName(CacheType.up, mid);
     const redis = this.redisService.getClient('upCache');
     const data = await redis.get(redisKey);
@@ -145,5 +149,19 @@ export class UpCrawler {
       list.map((i) => i.mid),
       UpFrom.UPDATE,
     );
+  }
+
+  async logStep(
+    step: 'active' | 'fetch' | 'fetchFail' | 'create',
+    status: 'start' | 'end',
+    mid: number,
+  ) {
+    const redis = this.redisService.getClient('log');
+    const KEY = `up:step`;
+    const len = await redis.llen(KEY);
+    if (len >= 30) {
+      await redis.lpop(KEY);
+    }
+    await redis.lpush(KEY, `${mid}:${step}:${status}`);
   }
 }

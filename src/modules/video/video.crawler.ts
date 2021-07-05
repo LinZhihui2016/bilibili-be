@@ -46,6 +46,7 @@ export class VideoCrawler {
 
   async create(data: VideoDto, from = 'crawler') {
     const { bvid } = data;
+    await this.logStep('create', 'start', bvid);
     const $data = await this.videoService.findByBvid(bvid);
     const $$data = await $val($data || new VideoEntity(), data);
     if (data.type !== VideoType.fail) {
@@ -61,10 +62,12 @@ export class VideoCrawler {
     if (from === 'crawler') {
       await sleep(3000);
     }
+    await this.logStep('create', 'end', bvid);
     return saveData;
   }
 
   async failFetch(bvid: string, fail_msg: string) {
+    await this.logStep('fetchFail', 'start', bvid);
     errorLog([bvid, fail_msg].join(' | '));
     await this.jobQueue.pause();
     const $data = await this.videoService.findByBvid(bvid);
@@ -77,6 +80,7 @@ export class VideoCrawler {
   }
 
   async fetch(bv: string, from: VideoFrom) {
+    await this.logStep('fetch', 'start', bv);
     const redisKey = cacheName(CacheType.video, bv);
     const redis = this.redisService.getClient('videoCache');
     const data = await redis.get(redisKey);
@@ -212,5 +216,19 @@ export class VideoCrawler {
       list.map((i) => i.bvid),
       VideoFrom.UPDATE,
     );
+  }
+
+  async logStep(
+    step: 'active' | 'fetch' | 'fetchFail' | 'create',
+    status: 'start' | 'end',
+    bv: string,
+  ) {
+    const redis = this.redisService.getClient('log');
+    const KEY = `video:step`;
+    const len = await redis.llen(KEY);
+    if (len >= 30) {
+      await redis.lpop(KEY);
+    }
+    await redis.lpush(KEY, `${bv}:${step}:${status}`);
   }
 }
