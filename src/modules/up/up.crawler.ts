@@ -159,7 +159,7 @@ export class UpCrawler {
   ) {
     const redis = this.redisService.getClient('log');
     const [date, time] = dayjs().format('MM-DD|HH:mm:ss').split('|');
-    const KEY = `${date}:${mid}`;
+    const KEY = `up:${date}:${mid}`;
     await redis.hset(KEY, `${step}:${status}`, time);
     await redis.expire(KEY, expireTime(WEEK));
   }

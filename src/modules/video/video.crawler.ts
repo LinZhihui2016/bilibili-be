@@ -225,7 +225,7 @@ export class VideoCrawler {
   ) {
     const redis = this.redisService.getClient('log');
     const [date, time] = dayjs().format('MM-DD|HH:mm:ss').split('|');
-    const KEY = `${date}:${bv}`;
+    const KEY = `video:${date}:${bv}`;
     await redis.hset(KEY, `${step}:${status}`, time);
     await redis.expire(KEY, expireTime(WEEK));
   }
