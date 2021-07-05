@@ -31,7 +31,7 @@ export class UpProcessor {
         const redis = this.redisService.getClient('log');
         await redis.set(`up:${key}`, 'time out');
       }
-    }, 10000);
+    }, 60000);
     await this.upCrawler.logStep('active', 'start', key);
     await this.upCrawler.fetch(mid);
     await this.upCrawler.logStep('active', 'end', key);
