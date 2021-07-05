@@ -7,12 +7,13 @@ import { cacheName, CacheType } from '../../util/redis';
 import { UpBaseDto, UpDto } from './up.dto';
 import { errorLog } from '../../log4js/log';
 import { apiUserInfo, apiUserStat, apiUserUpstat } from '../../crawler/user';
-import { expireTime, MINUTE, sleep } from '../../util/date';
+import { expireTime, MINUTE, sleep, WEEK } from '../../util/date';
 import { $val } from '../../util/mysql';
 import { Cron } from '@nestjs/schedule';
 import { UpFrom, UpJob } from './up.processor';
 import { UpService } from './up.service';
 import { MagicNumber } from '../../util/magicNumber';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UpCrawler {
@@ -157,11 +158,9 @@ export class UpCrawler {
     mid: number,
   ) {
     const redis = this.redisService.getClient('log');
-    const KEY = `up:step`;
-    const len = await redis.llen(KEY);
-    if (len >= 300) {
-      await redis.lpop(KEY);
-    }
-    await redis.lpush(KEY, `${mid}:${step}:${status}`);
+    const [date, time] = dayjs().format('MM-DD|HH:mm:ss').split('|');
+    const KEY = `${date}:${mid}`;
+    await redis.hset(KEY, `${step}:${status}`, time);
+    await redis.expire(KEY, expireTime(WEEK));
   }
 }
