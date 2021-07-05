@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from 'nestjs-dotenv';
 import { NodeFetch } from './fetch';
 import NodeAxios from './axios';
 import { AXIOS_OPTION } from './static';
@@ -21,10 +20,7 @@ export class CrawlerService {
   apiBase = 'https://api.bilibili.com/x';
   pgcBase = 'https://api.bilibili.com/pgc';
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly redisService: RedisService,
-  ) {}
+  constructor(private readonly redisService: RedisService) {}
 
   async apiBvHtml(bv: string) {
     const redis = this.redisService.getClient('config');
